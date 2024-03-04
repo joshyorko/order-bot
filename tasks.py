@@ -3,7 +3,7 @@ from robocorp import browser
 
 from RPA.HTTP import HTTP
 from RPA.PDF import PDF
-from RPA.Tables import Tables
+import pandas as pd
 from pathlib import Path
 import shutil
 from time import sleep
@@ -52,17 +52,23 @@ def download_csv_file():
     http.download("https://robotsparebinindustries.com/orders.csv", overwrite=True)
 
 
-def fill_the_form(orders):
+def fill_the_form(orders_df):
     error_selector = ".alert-danger"
-    success_indicator = "#receipt"  # Element indicating successful order placement
+    success_indicator = "#receipt"
     page = browser.page()
-    
-    for order in orders:  # Now processes all orders
-        order_number = str(order["Order number"])
+
+    # Convert DataFrame to list of dictionaries for easier iteration
+    orders_dict_list = orders_df.to_dict('records')
+
+    for order in orders_dict_list:
+        order_number = order["Order number"]
         setup_order(page, order)
-        
+
+        attempts = 0
+        max_attempts = 5  # Define max retry attempts
         placed_successfully = False
-        while not placed_successfully:
+
+        while not placed_successfully and attempts < max_attempts:
             page.click('//*[@id="order"]')  # Attempt to place the order
             sleep(2)  # Short delay to allow for page response
 
@@ -72,14 +78,16 @@ def fill_the_form(orders):
                 placed_successfully = True
             elif page.is_visible(error_selector, timeout=5000):
                 print(f"Error placing order {order_number}. Retrying...")
-                # Handle specific error conditions here if necessary before retrying
-                # For example, check if an error message indicates a retry is not possible
-                continue
+                attempts += 1
             else:
                 print(f"Order {order_number} status unclear. Retrying...")
-                # Optional: Implement additional checks or conditions here
-            
+                attempts += 1
+
+        if not placed_successfully:
+            print(f"Failed to place order {order_number} after {max_attempts} attempts.")
         reset_form_for_next_order(page)
+
+
 
 
 def finalize_order(page, order_number):
@@ -175,13 +183,13 @@ def embed_screenshot_to_receipt(screenshot, pdf_file):
 
 def get_orders():
   
-    tables = Tables()
+    
 
     # Define the path to your CSV file
     csv_file_path = "orders.csv"
 
     # Read the CSV file into a table
-    table = tables.read_table_from_csv(csv_file_path, header=True)
+    table = pd.read_csv(csv_file_path)
     return table
  
 
