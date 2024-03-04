@@ -35,11 +35,11 @@ def download_csv_file():
 
 def fill_the_form(orders_df):
     """Fills the robot order form based on the provided orders."""
+    
     error_selector = ".alert-danger"
     success_indicator = "#receipt"
     page = browser.page()
 
-    # Convert DataFrame to list of dictionaries for easier iteration
     orders_dict_list = orders_df.to_dict("records")
 
     for order in orders_dict_list:
@@ -47,12 +47,12 @@ def fill_the_form(orders_df):
         setup_order(page, order)
 
         attempts = 0
-        max_attempts = 5  # Define max retry attempts
+        max_attempts = 5  
         placed_successfully = False
 
         while not placed_successfully and attempts < max_attempts:
-            page.click('//*[@id="order"]')  # Attempt to place the order
-            sleep(2)  # Short delay to allow for page response
+            page.click('//*[@id="order"]') 
+            sleep(2)  
 
             if page.is_visible(success_indicator, timeout=10000):
                 print(f"Order {order_number} placed successfully.")
@@ -77,11 +77,9 @@ def finalize_order(page, order_number):
     pdf_filename = store_receipt_as_pdf(order_number)
     screen_shot_file_name = screenshot_robot(order_number)
     embed_screenshot_to_receipt(screen_shot_file_name, pdf_filename)
-    # Prepare for the next order, if applicable
     reset_form_for_next_order(page)
 
 
-# Implement reset_form_for_next_order, store_receipt_as_pdf, screenshot_robot, and any other necessary functions here
 
 
 def setup_order(page, order):
@@ -99,7 +97,7 @@ def setup_order(page, order):
 def retry_order_placement(page, error_selector):
     """Attempt to click the order button again and verify success."""
     page.click('//*[@id="order"]')
-    # Optionally wait for a condition that confirms the order went through or the error was resolved
+   
     if not page.is_visible(error_selector, timeout=5000):
         print("Succesfully placed order after RETRY!")
     else:
@@ -125,14 +123,14 @@ def close_annoying_modal():
 def screenshot_robot(order_number):
     """Take a screenshot of the page"""
     screenshots_dir = Path("output/screenshots")
-    screenshots_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+    screenshots_dir.mkdir(parents=True, exist_ok=True)  
 
     page = browser.page()
     filename = screenshots_dir / f"{order_number}_screenshot_robot.png"
     element = page.locator("#robot-preview-image")
     element.screenshot(
         path=str(filename)
-    )  # Ensure the path is converted to string if necessary
+    )  
 
     return filename
 
@@ -140,14 +138,13 @@ def screenshot_robot(order_number):
 def store_receipt_as_pdf(order):
     """Stores the receipt as a PDF file"""
     receipts_dir = Path("output/receipts")
-    receipts_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
-
+    receipts_dir.mkdir(parents=True, exist_ok=True) 
     page = browser.page()
     results_html = page.locator("#receipt").inner_html()
     pdf_filename = receipts_dir / f"{order}_store_receipt.pdf"
     pdf.html_to_pdf(
         results_html, str(pdf_filename)
-    )  # Ensure the path is converted to string if necessary
+    )  
 
     return pdf_filename
 
@@ -156,9 +153,8 @@ def archive_receipts():
     """Creates a ZIP archive of the receipts and the screenshots."""
     output_dir = Path("output")
     receipts_dir = output_dir / "receipts"
-    output_dir.mkdir(parents=True, exist_ok=True)  # Ensure the output directory exists
+    output_dir.mkdir(parents=True, exist_ok=True)  
 
-    # Create a ZIP archive of the receipts directory
     archive_path = shutil.make_archive(
         output_dir / "receipts_archive", "zip", root_dir=receipts_dir
     )
@@ -173,8 +169,6 @@ def embed_screenshot_to_receipt(screenshot, pdf_file):
 def get_orders():
     """Reads the orders from a CSV file into a table."""
     csv_file_path = "orders.csv"
-
-    # Read the CSV file into a table
     table = pd.read_csv(csv_file_path)
     return table
 
