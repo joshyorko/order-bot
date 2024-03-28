@@ -3,7 +3,6 @@ from robocorp import browser
 
 from RPA.HTTP import HTTP
 from RPA.PDF import PDF
-from RPA.Assistant import Assistant
 import pandas as pd
 from pathlib import Path
 import shutil
@@ -21,21 +20,12 @@ def order_robots_from_RobotSpareBin():
     """Orders robots from the RobotSpareBin website."""
     browser.configure(screenshot="only-on-failure")
     download_csv_file()
-    user_input_task()
+    open_robot_order_website()
     close_annoying_modal()
     orders = get_orders()
     fill_the_form(orders)
     archive_receipts()
 
-def user_input_task():
-    """User input task to get the URL from the user."""
-    assistant = Assistant()
-    assistant.add_heading("Input from user")
-    assistant.add_text_input("text_input", placeholder="Please enter URL")
-    assistant.add_submit_buttons("Submit", default="Submit")
-    result = assistant.run_dialog()
-    url = result.text_input
-    open_robot_order_website(url)
 
 def download_csv_file():
     """Downloads the CSV file with the orders."""
@@ -177,6 +167,5 @@ def get_orders():
     return table
 
 
-def open_robot_order_website(url):
-    """Opens the RobotSpareBin website."""
-    browser.goto(url)
+def open_robot_order_website():
+    browser.goto(website)
